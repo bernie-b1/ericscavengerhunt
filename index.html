@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ericson's Hunt">
+<meta name="theme-color" content="#fdf8f5">
+<link rel="manifest" href="manifest.json">
+<title>Ericson's Hunt</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fdf8f5;--bg2:#f5ede6;
+  --pink:#d4637a;--pink-s:#eeaab8;--pink-p:#fceaee;
+  --sage:#6b9478;--sage-s:#9dc0a8;--sage-p:#e2efe6;
+  --ink:#1a120a;--muted:#8a7060;
+  --line:rgba(107,148,120,.22);--linep:rgba(212,99,122,.28);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--ink);}
+
+.screen{position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* SPLASH */
+#sSplash{background:var(--ink);align-items:center;justify-content:center;padding:2.5rem 2rem;gap:1.1rem;overflow:hidden;}
+#sSplash::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 25% 65%,rgba(212,99,122,.15) 0%,transparent 55%),
+             radial-gradient(ellipse at 78% 22%,rgba(107,148,120,.12) 0%,transparent 50%);}
+#sSplash>*{position:relative;}
+.sp-tag{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.28em;color:var(--sage-s);text-transform:uppercase;}
+.sp-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2.8rem,10vw,4.4rem);font-weight:600;line-height:1.06;text-align:center;color:#fdf8f5;}
+.sp-title em{font-style:italic;color:var(--pink-s);}
+.sp-date{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.18em;color:var(--sage-s);border:1px solid rgba(157,192,168,.28);padding:.36rem 1rem;border-radius:20px;}
+.sp-line{width:36px;height:1px;background:linear-gradient(90deg,transparent,var(--pink-s),transparent);}
+.sp-sub{font-size:.84rem;color:#9a8878;text-align:center;max-width:270px;line-height:1.65;}
+.sp-btn{background:var(--pink);color:white;border:none;padding:.9rem 2.6rem;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.84rem;letter-spacing:.06em;border-radius:3px;cursor:pointer;box-shadow:0 5px 22px rgba(212,99,122,.38);margin-top:.4rem;transition:background .2s,transform .15s;}
+.sp-btn:active{background:#bf4a63;}
+
+/* HUNT */
+#sHunt{background:var(--bg);}
+.h-header{position:sticky;top:0;z-index:50;background:rgba(253,248,245,.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.h-logo{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--pink);}
+.h-pill{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;color:var(--sage);background:var(--sage-p);border:1px solid var(--line);padding:.26rem .72rem;border-radius:20px;}
+.h-prog{height:3px;background:var(--bg2);flex-shrink:0;}
+.h-bar{height:100%;background:linear-gradient(90deg,var(--sage),var(--pink));transition:width .6s cubic-bezier(.4,0,.2,1);}
+.h-body{padding:1.4rem 1.2rem 2rem;display:flex;flex-direction:column;gap:1rem;}
+
+/* CLUE CARD */
+.clue-card{border-radius:6px;overflow:hidden;background:white;box-shadow:0 2px 24px rgba(26,18,10,.09),0 0 0 1px rgba(107,148,120,.1);}
+.cc-top{padding:1.4rem 1.5rem 1.2rem;position:relative;overflow:hidden;}
+.cc-top::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--pink-p) 0%,var(--sage-p) 100%);opacity:.65;}
+.cc-top>*{position:relative;}
+.cc-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.22em;color:var(--sage);text-transform:uppercase;margin-bottom:.32rem;}
+.cc-name{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:var(--ink);line-height:1.2;}
+.cc-cat{display:inline-flex;align-items:center;gap:.28rem;margin-top:.5rem;font-size:.67rem;font-weight:500;letter-spacing:.05em;color:var(--pink);background:white;border:1px solid var(--linep);padding:.2rem .62rem;border-radius:20px;}
+.mystery-badge{display:inline-flex;align-items:center;gap:.4rem;margin-top:.4rem;font-size:.76rem;font-weight:500;color:#6a5040;background:rgba(255,255,255,.75);border:1px dashed #c8b0a0;padding:.28rem .8rem;border-radius:20px;}
+
+/* CARD BODY */
+.cc-body{padding:1.3rem 1.5rem;}
+.cc-blabel{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.22em;color:var(--sage);text-transform:uppercase;margin-bottom:.48rem;}
+.cc-clue{font-family:'Cormorant Garamond',serif;font-size:1.06rem;font-style:italic;line-height:1.78;color:#3a2818;background:var(--bg2);padding:1rem 1.1rem;border-left:2.5px solid var(--pink);border-radius:0 3px 3px 0;}
+
+/* GUESS ZONE */
+.guess-zone{padding:1.1rem 1.5rem 1.4rem;border-top:1px solid var(--bg2);}
+.gz-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.2em;color:var(--sage);text-transform:uppercase;margin-bottom:.65rem;}
+.gz-pips{display:flex;gap:.4rem;margin-bottom:.8rem;}
+.gz-pip{width:11px;height:11px;border-radius:50%;background:var(--bg2);border:1.5px solid #d8ccc4;transition:background .3s,border-color .3s;}
+.gz-pip.used{background:var(--pink-s);border-color:var(--pink);}
+.gz-pip.right{background:var(--sage);border-color:var(--sage);}
+.gz-row{display:flex;gap:.5rem;}
+.gz-input{flex:1;background:var(--bg2);border:1.5px solid #d8ccc4;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:.9rem;padding:.65rem .85rem;border-radius:3px;outline:none;-webkit-appearance:none;transition:border-color .2s;}
+.gz-input:focus{border-color:var(--sage-s);}
+.gz-input.shake{animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.gz-btn{background:var(--ink);color:white;border:none;padding:.65rem 1.1rem;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.8rem;border-radius:3px;cursor:pointer;-webkit-appearance:none;transition:background .2s;}
+.gz-btn:active{background:#2e1e10;}
+.gz-btn:disabled{background:#ccc;cursor:not-allowed;}
+.gz-feedback{margin-top:.65rem;font-size:.8rem;padding:.5rem .8rem;border-radius:3px;display:none;line-height:1.5;}
+.gz-feedback.show{display:block;}
+.gz-feedback.wrong{background:var(--pink-p);color:#7a1828;border:1px solid var(--pink-s);}
+.gz-feedback.correct{background:var(--sage-p);color:#1e4828;border:1px solid var(--sage-s);}
+
+/* REVEAL OVERLAY */
+#revealOverlay{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(26,18,10,.88);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+#revealOverlay.show{display:flex;}
+.reveal-box{background:var(--bg);border-radius:8px;padding:1.8rem 1.6rem;max-width:320px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1rem;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.reveal-icon{font-size:2.4rem;}
+.reveal-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:var(--ink);line-height:1.2;}
+.reveal-title em{font-style:italic;color:var(--pink);}
+.reveal-location{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--sage);}
+.reveal-sub{font-size:.82rem;color:var(--muted);line-height:1.6;}
+.reveal-roast{font-size:.82rem;color:var(--pink);font-style:italic;line-height:1.6;background:var(--pink-p);border:1px solid var(--linep);padding:.75rem 1rem;border-radius:4px;width:100%;text-align:left;}
+.reveal-btn{background:var(--pink);color:white;border:none;padding:.85rem;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.84rem;border-radius:3px;cursor:pointer;width:100%;-webkit-appearance:none;transition:background .2s;}
+.reveal-btn:active{background:#bf4a63;}
+.reveal-btn.sage{background:var(--sage);}
+.reveal-btn.sage:active{background:#527060;}
+
+/* ACTIONS */
+.cc-actions{display:grid;grid-template-columns:1fr 1fr;gap:.62rem;padding:0 1.5rem 1.4rem;}
+.btn-nav{display:flex;align-items:center;justify-content:center;gap:.38rem;padding:.74rem;background:var(--ink);color:#fdf8f5;text-decoration:none;font-size:.77rem;font-weight:500;border:none;border-radius:3px;cursor:pointer;-webkit-appearance:none;transition:background .2s;}
+.btn-nav:active{background:#2e1e10;}
+.btn-nav svg{width:13px;height:13px;flex-shrink:0;}
+.btn-done{grid-column:1/-1;padding:.9rem;background:var(--pink);color:white;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.84rem;letter-spacing:.04em;border:none;border-radius:3px;cursor:pointer;-webkit-appearance:none;box-shadow:0 3px 14px rgba(212,99,122,.28);transition:background .2s;}
+.btn-done:active{background:#bf4a63;}
+.btn-done:disabled{background:#ddd;color:#aaa;cursor:not-allowed;box-shadow:none;}
+
+/* HINTS */
+.hint-wrap{margin-top:1rem;}
+.hint-locked{font-size:.78rem;color:var(--muted);background:var(--bg2);border:1px dashed #d8ccc4;padding:.5rem .9rem;border-radius:3px;display:flex;align-items:center;gap:.4rem;}
+.hint-btn{background:none;border:1px dashed rgba(107,148,120,.4);color:var(--sage);font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;padding:.42rem .88rem;border-radius:3px;cursor:pointer;-webkit-appearance:none;}
+.hint-text{display:none;margin-top:.62rem;font-size:.81rem;line-height:1.62;color:var(--muted);background:var(--sage-p);border:1px solid var(--line);padding:.78rem 1rem;border-radius:3px;}
+.hint-text.open{display:block;}
+
+/* GPS */
+.gps-banner{display:flex;align-items:center;gap:.6rem;background:var(--sage-p);border:1px solid var(--line);border-radius:3px;padding:.62rem 1rem;font-size:.74rem;color:#2a5038;line-height:1.5;}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(1.4);}}
+.gps-msg .m{padding:.62rem 1rem;border-radius:3px;font-size:.77rem;display:flex;align-items:flex-start;gap:.45rem;line-height:1.5;}
+.m.searching{background:#fff9e4;border:1px solid #f0dc80;color:#7a5e08;}
+.m.near{background:var(--sage-p);border:1px solid var(--sage-s);color:#1e4828;}
+.m.far{background:var(--pink-p);border:1px solid var(--pink-s);color:#7a1828;}
+
+/* TOAST */
+#toast{position:fixed;bottom:1.6rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--ink);color:white;padding:.78rem 1.3rem;border-radius:24px;font-size:.82rem;font-weight:500;z-index:400;box-shadow:0 8px 28px rgba(0,0,0,.35);border:1px solid rgba(212,99,122,.4);transition:transform .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+
+/* NEXT TEASE */
+.next-tease{background:white;border:1px solid var(--line);border-radius:4px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:.75rem;}
+.tease-dot{width:8px;height:8px;border-radius:50%;background:var(--pink-s);flex-shrink:0;}
+.tease-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;}
+.tease-name{font-size:.88rem;font-weight:500;color:var(--ink);margin-top:.18rem;}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:.75rem;font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line);}
+
+/* STOP LIST */
+.stop-list{display:flex;flex-direction:column;gap:.42rem;}
+.stop-item{display:flex;align-items:center;gap:.82rem;padding:.78rem 1rem;background:white;border:1px solid transparent;border-radius:4px;cursor:pointer;transition:border-color .15s;}
+.stop-item.active{border-color:var(--pink);background:var(--pink-p);}
+.stop-item.done{opacity:.5;}
+.stop-item.locked{cursor:default;}
+.si-dot{width:27px;height:27px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.67rem;font-weight:600;}
+.d-done{background:var(--sage);color:white;}
+.d-now{background:var(--pink);color:white;}
+.d-later{background:var(--bg2);color:#b0a090;border:1px solid #e0d8d0;}
+.si-info{flex:1;min-width:0;}
+.si-name{font-size:.83rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.si-cat{font-size:.67rem;color:var(--muted);}
+
+/* CELEBRATION */
+#sCelebrate{
+  background:var(--ink);
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  position:fixed;
+  inset:0;
+}
+#sCelebrate::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 35% 55%,rgba(212,99,122,.18) 0%,transparent 62%),radial-gradient(ellipse at 72% 28%,rgba(107,148,120,.13) 0%,transparent 52%);}
+.cel-inner{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;
+  align-items:center;text-align:center;
+  padding:2.5rem 2rem;gap:1.1rem;
+  width:100%;max-height:100vh;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.cel-icon{font-size:2.8rem;flex-shrink:0;}
+.cel-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,8vw,3.2rem);font-weight:600;color:#fdf8f5;line-height:1.12;flex-shrink:0;}
+.cel-title em{font-style:italic;color:var(--pink-s);}
+.cel-body{font-size:.87rem;color:#a09080;line-height:1.78;max-width:285px;flex-shrink:0;}
+.cel-body strong{color:var(--sage-s);}
+.hobbit-card{background:rgba(255,255,255,.06);border:1px solid rgba(157,192,168,.22);border-radius:4px;padding:1.1rem 1.4rem;max-width:295px;width:100%;flex-shrink:0;}
+.hob-label{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.2em;color:var(--sage-s);text-transform:uppercase;margin-bottom:.45rem;}
+.hob-text{font-family:'Cormorant Garamond',serif;font-size:.96rem;font-style:italic;color:#d4c4b4;line-height:1.72;}
+.cel-reset{background:var(--pink);color:white;border:none;padding:.82rem 2rem;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.82rem;border-radius:3px;cursor:pointer;flex-shrink:0;-webkit-appearance:none;}
+
+/* CONFETTI */
+#confettiContainer{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.heart{position:absolute;top:-40px;font-size:1.4rem;animation:heartFall linear forwards;}
+.confetti-strip{position:absolute;top:-20px;width:8px;height:16px;border-radius:2px;animation:stripFall linear forwards;}
+@keyframes heartFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(360deg);opacity:0;}}
+@keyframes stripFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+/* ADMIN LOGIN */
+#sAdminLogin{background:var(--ink);align-items:center;justify-content:center;padding:2.5rem 2rem;gap:1.2rem;}
+#sAdminLogin::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 60% 40%,rgba(107,148,120,.1) 0%,transparent 55%);}
+#sAdminLogin>*{position:relative;}
+.al-icon{font-size:2rem;}
+.al-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:#fdf8f5;text-align:center;}
+.al-sub{font-size:.82rem;color:#9a8878;text-align:center;max-width:240px;line-height:1.6;}
+.al-input{width:100%;max-width:260px;background:rgba(255,255,255,.07);border:1px solid rgba(107,148,120,.35);color:#fdf8f5;font-family:'DM Mono',monospace;font-size:.95rem;letter-spacing:.08em;padding:.82rem 1rem;border-radius:3px;text-align:center;outline:none;-webkit-appearance:none;}
+.al-input::placeholder{color:#6a5a48;}
+.al-input:focus{border-color:var(--sage-s);}
+.al-btn{background:var(--sage);color:white;border:none;padding:.85rem 2.2rem;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.84rem;border-radius:3px;cursor:pointer;-webkit-appearance:none;}
+.al-err{font-size:.78rem;color:var(--pink-s);display:none;}
+.al-err.show{display:block;}
+.al-back{background:none;border:none;color:#6a5a48;font-size:.76rem;cursor:pointer;text-decoration:underline;}
+
+/* ADMIN PANEL */
+#sAdmin{background:var(--bg);}
+.admin-header{position:sticky;top:0;z-index:50;background:rgba(26,18,10,.97);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.admin-logo{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--sage-s);}
+.admin-logout{background:none;border:1px solid rgba(107,148,120,.3);color:var(--sage-s);font-size:.7rem;padding:.28rem .7rem;border-radius:20px;cursor:pointer;}
+.admin-body{padding:1.2rem;display:flex;flex-direction:column;gap:1.4rem;padding-bottom:3rem;}
+.admin-section{background:white;border-radius:6px;overflow:hidden;box-shadow:0 1px 12px rgba(26,18,10,.07);}
+.as-header{padding:.85rem 1.2rem;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid var(--bg2);}
+.as-icon{font-size:1.1rem;}
+.as-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--ink);}
+.as-body{padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.8rem;}
+.prog-overview{display:flex;align-items:center;gap:.8rem;}
+.prog-big{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;}
+.prog-big-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--pink));border-radius:4px;transition:width .6s ease;}
+.prog-label{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);white-space:nowrap;}
+.stop-progress-row{display:flex;align-items:center;gap:.7rem;padding:.55rem .7rem;border-radius:3px;background:var(--bg2);}
+.spr-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;}
+.spr-done{background:var(--sage);color:white;}
+.spr-now{background:var(--pink);color:white;}
+.spr-not{background:#e0d8d0;color:#a09080;}
+.spr-name{font-size:.8rem;font-weight:500;flex:1;}
+.spr-status{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted);text-align:right;}
+.text-card{background:var(--bg2);border-radius:4px;padding:.9rem 1rem;}
+.tc-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--sage);margin-bottom:.5rem;}
+.tc-text{font-size:.84rem;line-height:1.65;color:var(--ink);margin-bottom:.7rem;}
+.tc-copy{background:var(--ink);color:white;border:none;padding:.42rem .9rem;font-size:.72rem;font-weight:500;border-radius:3px;cursor:pointer;-webkit-appearance:none;}
+.tc-copy.copied{background:var(--sage);}
+.booking-row{display:flex;flex-direction:column;gap:.3rem;padding:.7rem .9rem;background:var(--bg2);border-radius:3px;}
+.br-name{font-size:.82rem;font-weight:500;}
+.br-links{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.2rem;}
+.br-link{font-size:.72rem;color:var(--pink);text-decoration:none;background:var(--pink-p);border:1px solid var(--linep);padding:.2rem .55rem;border-radius:20px;}
+.br-note{font-size:.7rem;color:var(--muted);font-style:italic;}
+.edit-stop-card{background:var(--bg2);border-radius:4px;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.6rem;}
+.esc-name{font-size:.85rem;font-weight:600;color:var(--pink);}
+.edit-field{display:flex;flex-direction:column;gap:.25rem;}
+.ef-label{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--sage);}
+.ef-input{background:white;border:1px solid var(--line);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:.82rem;padding:.5rem .7rem;border-radius:3px;outline:none;width:100%;resize:vertical;-webkit-appearance:none;}
+.ef-input:focus{border-color:var(--sage-s);}
+.ef-save{align-self:flex-end;background:var(--sage);color:white;border:none;padding:.4rem 1rem;font-size:.75rem;font-weight:600;border-radius:3px;cursor:pointer;-webkit-appearance:none;}
+.ef-saved{color:var(--sage);font-size:.72rem;display:none;}
+.ef-saved.show{display:inline;}
+
+/* PIN SCREEN */
+#sPin{background:var(--ink);align-items:center;justify-content:center;padding:2.5rem 2rem;gap:1.4rem;overflow:hidden;}
+#sPin::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 30% 60%,rgba(212,99,122,.14) 0%,transparent 55%),
+             radial-gradient(ellipse at 75% 25%,rgba(107,148,120,.1) 0%,transparent 50%);}
+#sPin>*{position:relative;}
+.pin-icon{font-size:2rem;}
+.pin-title{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,7vw,2.6rem);font-weight:600;color:#fdf8f5;text-align:center;line-height:1.15;}
+.pin-title em{font-style:italic;color:var(--pink-s);}
+.pin-sub{font-size:.82rem;color:#9a8878;text-align:center;max-width:250px;line-height:1.6;}
+.pin-dots{display:flex;gap:.85rem;justify-content:center;}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:transparent;transition:background .2s,border-color .2s;}
+.pin-dot.filled{background:var(--pink-s);border-color:var(--pink-s);}
+.pin-dot.shake{animation:pinShake .4s ease;}
+@keyframes pinShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.pin-err{font-size:.78rem;color:var(--pink-s);font-style:italic;min-height:1.2em;text-align:center;transition:opacity .3s;}
+.pin-err.hidden{opacity:0;}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;width:100%;max-width:240px;}
+.pin-key{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fdf8f5;font-family:'DM Sans',sans-serif;font-size:1.3rem;font-weight:500;padding:1rem;border-radius:6px;cursor:pointer;-webkit-appearance:none;transition:background .15s,transform .1s;text-align:center;}
+.pin-key:active{background:rgba(255,255,255,.18);transform:scale(.94);}
+.pin-key.del{font-size:.95rem;color:var(--pink-s);}
+.pin-key.empty{background:transparent;border-color:transparent;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="sPin" class="screen active">
+  <div class="pin-icon">🔒</div>
+  <h1 class="pin-title">Enter the<br><em>passcode</em></h1>
+  <p class="pin-sub">Dyna made something for you. You know the number.</p>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <p class="pin-err hidden" id="pinErr">hint: our anniversary date...</p>
+  <div class="pin-grid">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key del" onclick="pinDelete()">⌫</button>
+  </div>
+  <button onclick="showScreen('sAdminLogin')" style="background:none;border:none;color:#2a1a0a;font-size:.6rem;margin-top:.4rem;cursor:pointer;letter-spacing:.1em;padding:.5rem;">· · ·</button>
+</div>
+
+<!-- SPLASH -->
+<div id="sSplash" class="screen">
+  <p class="sp-tag">For Ericson · 3.26.26</p>
+  <h1 class="sp-title">One Day,<br><em>Twelve Stops</em></h1>
+  <div class="sp-date">DALLAS, TEXAS</div>
+  <div class="sp-line"></div>
+  <p class="sp-sub">Follow the clues. Trust the process. Try not to cheat. Dyna made this for you. 🌸</p>
+  <button class="sp-btn" onclick="openHunt()">Open Your Hunt →</button>
+</div>
+
+<!-- HUNT -->
+<div id="sHunt" class="screen">
+  <div class="h-header">
+    <span class="h-logo">🗺 Ericson's Hunt</span>
+    <span class="h-pill" id="pill">0 / 12</span>
+  </div>
+  <div class="h-prog"><div class="h-bar" id="bar" style="width:0%"></div></div>
+  <div class="h-body">
+
+    <div class="clue-card">
+      <div class="cc-top">
+        <div class="cc-label" id="cLabel" onclick="qaLabelTap()" style="cursor:default;user-select:none;-webkit-user-select:none;">Stop 1 of 12</div>
+        <div id="cNameWrap"></div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-blabel">Your Clue</div>
+        <div class="cc-clue" id="cText"></div>
+        <div class="hint-wrap" id="hintWrap"></div>
+      </div>
+
+      <!-- Guess zone -->
+      <div class="guess-zone" id="guessZone">
+        <div class="gz-label">Where are you going? Guess the location.</div>
+        <div class="gz-pips" id="gzPips"></div>
+        <div class="gz-row">
+          <input class="gz-input" id="gzInput" type="text" placeholder="Type your guess…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <button class="gz-btn" id="gzBtn" onclick="submitGuess()">Guess</button>
+        </div>
+        <div class="gz-feedback" id="gzFeedback"></div>
+      </div>
+
+      <!-- Actions (shown after reveal) -->
+      <div class="cc-actions" id="ccActions" style="display:none;">
+        <a class="btn-nav" id="dirBtn" href="#" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          Directions
+        </a>
+        <button class="btn-nav" onclick="checkGPS()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Check GPS
+        </button>
+        <button class="btn-done" id="doneBtn" onclick="markDone()">✓ I'm here — mark complete</button>
+      </div>
+    </div>
+
+    <div id="gpsMsg" class="gps-msg"></div>
+
+    <div class="gps-banner">
+      <div class="pulse"></div>
+      <span>GPS is active. Your phone will buzz when you're getting close to each stop.</span>
+    </div>
+
+    <div id="nextTease" style="display:none;" class="next-tease">
+      <div class="tease-dot"></div>
+      <div>
+        <div class="tease-label">Up Next</div>
+        <div class="tease-name" id="teaseText"></div>
+      </div>
+    </div>
+
+    <div class="divider">All Stops</div>
+    <div class="stop-list" id="stopList"></div>
+  </div>
+</div>
+
+<!-- REVEAL OVERLAY -->
+<div id="revealOverlay">
+  <div class="reveal-box" id="revealBox"></div>
+</div>
+
+<!-- CELEBRATION -->
+<div id="sCelebrate" class="screen">
+  <div class="cel-inner">
+    <div class="cel-icon">🌸</div>
+    <h2 class="cel-title">You made it,<br><em>Ericson.</em></h2>
+    <p class="cel-body">12 stops. One full day. Smoothies, chin chin, UNO beef, VR suits, a French 75, peanuts on the table, and a turtle who deserved better than both of you today. <strong>You're almost home.</strong></p>
+    <div class="hobbit-card">
+      <div class="hob-label">Final Stop · Home</div>
+      <p class="hob-text">"There's a couch, a turtle, and parts one and two waiting. You know how this ends — the same way the first night did. Thunder in the background, forehead kiss, lights out. Go home, Ericson."</p>
+    </div>
+    <button class="cel-reset" onclick="resetHunt()">Start Over</button>
+  </div>
+  <div id="confettiContainer"></div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="sAdminLogin" class="screen">
+  <div class="al-icon">🌿</div>
+  <h2 class="al-title">Admin Access</h2>
+  <p class="al-sub">Dyna's side. Ericson, if you found this — close it. You're not ready.</p>
+  <input class="al-input" id="pwInput" type="password" placeholder="password" autocomplete="off">
+  <p class="al-err" id="pwErr">Wrong password. Try again.</p>
+  <button class="al-btn" onclick="checkPW()">Enter →</button>
+  <button class="al-back" onclick="showScreen('sSplash')">← Back</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="sAdmin" class="screen">
+  <div class="admin-header">
+    <span class="admin-logo">🌿 Dyna's Admin</span>
+    <button class="admin-logout" onclick="showScreen('sSplash')">Log Out</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-section">
+      <div class="as-header"><span class="as-icon">📍</span><span class="as-title">Ericson's Progress</span></div>
+      <div class="as-body">
+        <div class="prog-overview">
+          <div class="prog-big"><div class="prog-big-fill" id="adminBar" style="width:0%"></div></div>
+          <span class="prog-label" id="adminProg">0 / 12 stops</span>
+        </div>
+        <div id="adminStopList" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+        <button onclick="adminReset()" style="background:var(--pink-p);border:1px solid var(--linep);color:var(--pink);font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:600;padding:.55rem 1rem;border-radius:3px;cursor:pointer;-webkit-appearance:none;margin-top:.4rem;width:100%;">🔄 Reset All Progress</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <div class="as-header"><span class="as-icon">📱</span><span class="as-title">Cryptic Texts</span></div>
+      <div class="as-body">
+        <div class="text-card">
+          <div class="tc-label">Night Before — send the evening before</div>
+          <div class="tc-text" id="txt-night">twelve doors. one map. one day that was planned before you knew to ask for it. be ready by morning, ericson.</div>
+          <button class="tc-copy" id="copy-night" onclick="copyText('txt-night','copy-night')">Copy Text</button>
+        </div>
+        <div class="text-card">
+          <div class="tc-label">Morning Of — send when he wakes up</div>
+          <div class="tc-text" id="txt-morning">3/26 was the beginning. today is the rest of it. open what dyna sent you. start at the park that was built over something buried. 🌸</div>
+          <button class="tc-copy" id="copy-morning" onclick="copyText('txt-morning','copy-morning')">Copy Text</button>
+        </div>
+      </div>
+    </div>
+    <div class="admin-section">
+      <div class="as-header"><span class="as-icon">🔗</span><span class="as-title">Booking & Reservation Links</span></div>
+      <div class="as-body" id="bookingList"></div>
+    </div>
+    <div class="admin-section">
+      <div class="as-header"><span class="as-icon">✏️</span><span class="as-title">Edit Stops</span></div>
+      <div class="as-body" id="editList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">📍 You're getting close… 👀</div>
+
+<script>
+'use strict';
+
+/* ─── DATA ─── */
+var DEFAULT_STOPS = [
+  { name:"Smoothie King", cat:"🥤 First Stop",
+    clue:"First stop of the day and it's non-negotiable. You want 44oz and I will get you the 32oz instead 🩷",
+    hint:"Smoothie King near 111 Morgan Ave, Dallas. Mango Kale. You know the order.",
+    aliases:["smoothie king","smoothie","mango kale","the smoothie place","smoothie king morgan"],
+    lat:32.7915,lng:-96.8012,r:300,
+    map:"https://www.google.com/maps/search/?api=1&query=Smoothie+King+near+111+Morgan+Ave+Dallas+TX" },
+  { name:"Katy Trail", cat:"🎾 Activity Stop",
+    clue:"You said you'd take Dyna bar-hopping on this trail. You also said you'd beat her at tennis. That's two claims that still need to be settled. Head to the trail — walk it, grab a drink at the ice house, and bring your competitive energy.",
+    hint:"The Katy Trail runs through Uptown Dallas. Tennis courts near the trailhead, Katy Trail Ice House right on the path.",
+    aliases:["katy","the trail","katy trail ice house","ice house"],
+    lat:32.8086,lng:-96.8093,r:320,
+    map:"https://www.google.com/maps/search/?api=1&query=Katy+Trail+Ice+House+Dallas+TX" },
+  { name:"Griggs Park", cat:"🌸 The One",
+    clue:"You already know where this is. There's a park where, on March 26th, 2026, you asked a very important question — and someone said yes. Go back. There's a blanket, a turkey sandwich, and a deck of UNO cards waiting. You said you'd smoke her at UNO. She's been thinking about that ever since.",
+    hint:"Griggs Park, near Deep Ellum. Look for the blanket Dyna set up before you arrived.",
+    aliases:["griggs","the park","where you asked","where you proposed","deep ellum park"],
+    lat:32.7902,lng:-96.7785,r:260,
+    map:"https://www.google.com/maps/search/?api=1&query=Griggs+Park+Dallas+TX" },
+  { name:"Richland Market Grocery", cat:"🥜 Chin Chin Run",
+    clue:"There's a Nigerian grocery store in Dallas run by a very kind family. Find it. Get the chin chin. This is not a suggestion. It's a stop. Eat some in the car — Dyna will pretend to be upset about it and then eat some too.",
+    hint:"Richland Market Grocery at 9410 Walnut St, Dallas TX 75243. Family-owned, authentic. They have chin chin.",
+    aliases:["richland","richland market","african grocery","nigerian store","nigerian grocery","chin chin"],
+    lat:32.9232754,lng:-96.73628,r:250,
+    map:"https://www.google.com/maps/search/?api=1&query=Richland+Market+Grocery+9410+Walnut+St+Dallas+TX" },
+  { name:"Half Price Books", cat:"📖 Book Stop",
+    clue:"The flagship. The store you could disappear into for two hours. Find a book for Dyna — she'll find one for you. No vetoing. When you pick it, write a note inside. That's the deal.",
+    hint:"Half Price Books flagship at 5803 E NW Hwy, Dallas TX 75231. Enormous store. Café inside too.",
+    aliases:["half price","half price books","the bookstore","used books","hpb","book store"],
+    lat:32.866231,lng:-96.764778,r:220,
+    map:"https://www.google.com/maps/search/?api=1&query=Half+Price+Books+5803+E+NW+Hwy+Dallas+TX" },
+  { name:"Yumilicious Frozen Yogurt", cat:"🍦 Froyo Break",
+    clue:"You've been carrying books and opinions for twenty minutes. You need froyo. Head to Yumilicious on McKinney, load your cup up properly, and do not get a sad amount of toppings.",
+    hint:"Yumilicious Frozen Yogurt at 3800 McKinney Ave #160, Dallas. Self-serve, great toppings bar.",
+    aliases:["yumilicious","froyo","frozen yogurt","yogurt","fro yo","the froyo place"],
+    lat:32.808986,lng:-96.795355,r:210,
+    map:"https://www.google.com/maps/search/?api=1&query=Yumilicious+Frozen+Yogurt+3800+McKinney+Ave+Dallas" },
+  { name:"Sandbox VR", cat:"🎮 Level Up",
+    clue:"San Francisco. The suits. Full-body tracking. Completely ridiculous. Completely your idea of a great date. That was a good time — and now it's happening again. Find the place at Mockingbird Station, get suited up, and try not to embarrass yourself this time.",
+    hint:"Sandbox VR at 5321 E Mockingbird Ln, Ste 110, Dallas — inside Mockingbird Station.",
+    aliases:["sandbox","sandbox vr","vr","virtual reality","mockingbird","mockingbird station"],
+    lat:32.83185,lng:-96.76986,r:260,
+    map:"https://www.google.com/maps/search/?api=1&query=Sandbox+VR+5321+E+Mockingbird+Ln+Dallas+TX" },
+  { name:"Vintage Photo Booth · Deep Ellum", cat:"📸 Photo Moment",
+    clue:"Ericson. You have been given a structured, official opportunity to take a decent photo. No motion blur. No bad angles. Find a vintage photo strip booth in Deep Ellum — get in, press the button four times, and produce something good. The strip is the keepsake.",
+    hint:"Head into Deep Ellum — vintage photo strip booths along Elm St and Main St at various bars and venues.",
+    aliases:["photo booth","deep ellum","photo strip","vintage booth","the photo booth","photo"],
+    lat:32.7844,lng:-96.7841,r:420,
+    map:"https://www.google.com/maps/search/?api=1&query=photo+booth+Deep+Ellum+Dallas" },
+  { name:"Frankie's Downtown", cat:"🍸 The Rematch",
+    clue:"Sports bar. Main Street. Arkansas on the big screen. You took Dyna here the night you made things official — the server was rude, the drinks were strong, the night was perfect anyway. Tonight you each order a drink for the other. You're ordering her a French 75. Hers for you is already decided. No faces.",
+    hint:"Frankie's Downtown at 1303 Main St, Dallas TX 75202. Your order for her: French 75. Her order for you: her choice.",
+    aliases:["frankies","frankies downtown","the sports bar","main street bar","the bar"],
+    lat:32.78163,lng:-96.79887,r:210,
+    map:"https://www.google.com/maps/search/?api=1&query=Frankies+Downtown+1303+Main+St+Dallas+TX" },
+  { name:"Pet Store · Nabucco's Gift", cat:"🐢 For the Turtle",
+    clue:"He traveled all the way from Miami. He's been patient, unbothered, and frankly more chill than either of you on most days. Nabucco deserves a home upgrade — a new bowl, an aquatic plant for his tank, something worthy of a turtle named after an opera.",
+    hint:"PetSmart or Petco nearby. Look for aquatic plants, a nicer water dish, or tank décor.",
+    aliases:["pet store","petsmart","petco","nabucco","turtle","the pet store","pet shop"],
+    lat:32.8150,lng:-96.7950,r:400,
+    map:"https://www.google.com/maps/search/?api=1&query=PetSmart+Dallas+TX" },
+  { name:"Texas Roadhouse", cat:"🥩 The Finale",
+    clue:"You made it. The last stop is entirely yours — peanuts the second you sit down, bread that shows up like clockwork, and the ribeye you've been thinking about since stop four. Dyna made a reservation. Order the Jamaican Margarita. Eat everything. You earned this.",
+    hint:"Texas Roadhouse, Dallas. Reservation is handled. Ft. Worth Ribeye. Jamaican Margarita. Eat the bread.",
+    aliases:["texas roadhouse","roadhouse","the roadhouse","steak","ribeye","texas road house"],
+    lat:32.8208,lng:-96.8008,r:320,
+    map:"https://www.google.com/maps/search/?api=1&query=Texas+Roadhouse+Dallas+TX" },
+  { name:"111 Morgan Ave", cat:"🏠 Home",
+    clue:"You took me here after our first date and forced me to sleep with thunderstorm sounds in the background. We are going back and watching your favorite.",
+    hint:"You already know where this is. Go home, Ericson.",
+    aliases:["home","your place","morgan","111 morgan","the apartment","your apartment","morgan ave"],
+    lat:32.7915,lng:-96.8012,r:200,
+    map:"https://www.google.com/maps/search/?api=1&query=111+Morgan+Ave+Dallas+TX" }
+];
+
+var ROASTS = [
+  "Three guesses. Zero correct. Dyna made this whole thing for you and you couldn't get it in three. She's fine. She's not even upset. (She's a little upset.)",
+  "You had THREE tries, Ericson. Three. The clue was right there. Babe.",
+  "0 for 3. That's a record — not a good one, but a record. Here's where you're going anyway:",
+  "Dyna wrote you a whole clue and you guessed it zero times correctly. She loves you. She's briefly questioning it. Here's the answer:",
+  "Three guesses used. Zero points earned. Raised in boarding school and couldn't solve this. Just saying. Here's the location:"
+];
+
+var BOOKINGS = [
+  { name:"Katy Trail Tennis Courts", links:[{label:"Dallas Parks Tennis",url:"https://www.dallasparks.org/240/Tennis"}], note:"First come first served — arrive early to grab a court." },
+  { name:"Sandbox VR", links:[{label:"Book Experience",url:"https://sandboxvr.com/dallas"},{label:"View Games",url:"https://sandboxvr.com/dallas"}], note:"~$50/person. Book at least a week ahead. Sessions are 45 min." },
+  { name:"Frankie's Downtown", links:[{label:"Menu",url:"https://www.frankiesbar.com/qr-code-menu"},{label:"Call: (214) 741-1919",url:"tel:+12147411919"}], note:"No formal reservations — call ahead or arrive early. 1303 Main St." },
+  { name:"Texas Roadhouse", links:[{label:"Find Location & Waitlist",url:"https://www.texasroadhouse.com/texas-roadhouse-locations/texas/dallas"},{label:"Call Location",url:"tel:+12143618403"}], note:"Join the waitlist via app before leaving. Waits can hit 45–60 min." },
+  { name:"Half Price Books", links:[{label:"Store Info",url:"https://www.halfpricebooks.com/find-a-store/"}], note:"No reservation. Opens 9am. Budget ~$30 for two books." },
+  { name:"Richland Market Grocery", links:[{label:"Directions",url:"https://maps.apple.com/?address=9410+Walnut+St,+Dallas,+TX+75243"}], note:"9410 Walnut St. Open 9:30am–9:30pm. Get the chin chin." }
+];
+
+var ADMIN_PW = "dyna326";
+
+/* ─── STATE ─── */
+var STOPS = safeLoad('stops', DEFAULT_STOPS);
+var cur = safeLoadInt('cur', 0);
+var done = new Set(safeLoad('done', []));
+var guessState = safeLoad('guessState', {});
+var proximityFired = new Set(safeLoad('proxFired', []));
+var hintOpen = false;
+
+function safeLoad(key, fallback) {
+  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(JSON.stringify(fallback)); }
+  catch(e) { return JSON.parse(JSON.stringify(fallback)); }
+}
+function safeLoadInt(key, fallback) {
+  try { var v = localStorage.getItem(key); return v !== null ? parseInt(v, 10) : fallback; }
+  catch(e) { return fallback; }
+}
+function saveAll() {
+  try {
+    localStorage.setItem('stops', JSON.stringify(STOPS));
+    localStorage.setItem('cur', String(cur));
+    localStorage.setItem('done', JSON.stringify(Array.from(done)));
+    localStorage.setItem('guessState', JSON.stringify(guessState));
+    localStorage.setItem('proxFired', JSON.stringify(Array.from(proximityFired)));
+  } catch(e) { /* Safari private mode — silently fail */ }
+}
+function getGS(i) {
+  if (!guessState[i]) guessState[i] = { guesses:0, revealed:false, correct:false };
+  return guessState[i];
+}
+
+/* ─── PIN ─── */
+var PIN_CODE = '0326';
+var pinEntry = '';
+
+function pinPress(digit) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += digit;
+  updatePinDots();
+  if (pinEntry.length === 4) {
+    setTimeout(function() { checkPin(); }, 120);
+  }
+}
+
+function pinDelete() {
+  pinEntry = pinEntry.slice(0, -1);
+  updatePinDots();
+  // hide error when they start correcting
+  document.getElementById('pinErr').classList.add('hidden');
+}
+
+function updatePinDots() {
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('pd' + i);
+    if (i < pinEntry.length) dot.classList.add('filled');
+    else dot.classList.remove('filled');
+  }
+}
+
+function checkPin() {
+  if (pinEntry === PIN_CODE) {
+    // correct — show splash with a brief celebration
+    showScreen('sSplash');
+  } else {
+    // wrong — shake dots, show hint, clear
+    var dots = document.getElementById('pinDots');
+    dots.classList.remove('shake');
+    var _ = dots.offsetWidth; // reflow
+    dots.classList.add('shake');
+    var err = document.getElementById('pinErr');
+    err.classList.remove('hidden');
+    pinEntry = '';
+    setTimeout(function() {
+      updatePinDots();
+      dots.classList.remove('shake');
+    }, 450);
+  }
+}
+
+/* ─── SCREENS ─── */
+function showScreen(id) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function openHunt() {
+  showScreen('sHunt');
+  initHunt();
+}
+
+/* ─── HUNT ─── */
+function initHunt() {
+  render();
+  startGPSWatch();
+  requestNotifPermission();
+}
+
+function render() {
+  var s = STOPS[cur];
+  var gs = getGS(cur);
+  var isDone = done.has(cur);
+
+  document.getElementById('cLabel').textContent = 'Stop ' + (cur+1) + ' of 12';
+  document.getElementById('cText').textContent = s.clue;
+  document.getElementById('dirBtn').href = s.map;
+  hintOpen = false;
+
+  var nw = document.getElementById('cNameWrap');
+  var guessZone = document.getElementById('guessZone');
+  var ccActions = document.getElementById('ccActions');
+
+  if (gs.revealed || isDone) {
+    nw.innerHTML = '<div class="cc-name">' + escHtml(s.name) + '</div><div class="cc-cat">' + escHtml(s.cat) + '</div>';
+    guessZone.style.display = 'none';
+    ccActions.style.display = 'grid';
+  } else {
+    var left = 3 - gs.guesses;
+    var badgeText = gs.guesses > 0 ? left + ' guess' + (left === 1 ? '' : 'es') + ' left' : 'Figure out where you\'re going';
+    nw.innerHTML = '<div class="mystery-badge">🔍 ' + badgeText + '</div>';
+    guessZone.style.display = 'block';
+    ccActions.style.display = 'none';
+    renderPips(gs.guesses, gs.correct);
+    document.getElementById('gzInput').value = '';
+    document.getElementById('gzInput').classList.remove('shake');
+    var fb = document.getElementById('gzFeedback');
+    fb.className = 'gz-feedback';
+    fb.textContent = '';
+    document.getElementById('gzBtn').disabled = false;
+  }
+
+  renderHint(s, gs, isDone);
+
+  var btn = document.getElementById('doneBtn');
+  if (isDone) { btn.textContent = '✓ Already completed'; btn.disabled = true; }
+  else { btn.textContent = "✓ I'm here — mark complete"; btn.disabled = false; }
+
+  document.getElementById('gpsMsg').innerHTML = '';
+
+  var nt = document.getElementById('nextTease');
+  if (cur < STOPS.length - 1 && isDone) {
+    nt.style.display = 'flex';
+    document.getElementById('teaseText').textContent = STOPS[cur + 1].name;
+  } else {
+    nt.style.display = 'none';
+  }
+
+  renderList();
+  updateProgress();
+}
+
+function renderHint(s, gs, isDone) {
+  var hw = document.getElementById('hintWrap');
+  if (isDone || gs.revealed) {
+    hw.innerHTML = '<button class="hint-btn" onclick="toggleHint()">🌿 Hint (unlocked)</button><div class="hint-text" id="hText">' + escHtml(s.hint) + '</div>';
+  } else {
+    hw.innerHTML = '<div class="hint-locked">🔒 Hint unlocks after you mark this stop complete.</div>';
+  }
+}
+
+function renderPips(usedCount, correct) {
+  var el = document.getElementById('gzPips');
+  el.innerHTML = '';
+  for (var i = 0; i < 3; i++) {
+    var d = document.createElement('div');
+    var cls = 'gz-pip';
+    if (i < usedCount) {
+      cls += (correct && i === usedCount - 1) ? ' right' : ' used';
+    }
+    d.className = cls;
+    el.appendChild(d);
+  }
+}
+
+function renderList() {
+  var el = document.getElementById('stopList');
+  el.innerHTML = '';
+  for (var i = 0; i < STOPS.length; i++) {
+    var s = STOPS[i];
+    var isDone = done.has(i);
+    var isNow = i === cur;
+    var isLocked = i > cur && !isDone;
+    var gs = getGS(i);
+
+    var d = document.createElement('div');
+    var cls = 'stop-item';
+    if (isNow) cls += ' active';
+    if (isDone) cls += ' done';
+    if (isLocked) cls += ' locked';
+    d.className = cls;
+
+    var dotCls = isDone ? 'd-done' : isNow ? 'd-now' : 'd-later';
+    var dotText = isDone ? '✓' : String(i + 1);
+    var nameDisplay = isLocked ? '🔒 ???' : (gs.revealed || isDone ? escHtml(s.name) : '❓ Mystery Stop');
+    var catDisplay = isLocked ? 'Complete current stop to unlock' : (gs.revealed || isDone ? escHtml(s.cat) : 'Solve the clue to reveal');
+
+    d.innerHTML = '<div class="si-dot ' + dotCls + '">' + dotText + '</div>' +
+      '<div class="si-info"><div class="si-name">' + nameDisplay + '</div><div class="si-cat">' + catDisplay + '</div></div>';
+
+    if (!isLocked) {
+      (function(idx) {
+        d.addEventListener('click', function() { cur = idx; render(); scrollTop(); });
+      })(i);
+    }
+    el.appendChild(d);
+  }
+}
+
+function updateProgress() {
+  var p = (done.size / STOPS.length) * 100;
+  document.getElementById('bar').style.width = p + '%';
+  document.getElementById('pill').textContent = done.size + ' / ' + STOPS.length;
+}
+
+function toggleHint() {
+  hintOpen = !hintOpen;
+  var h = document.getElementById('hText');
+  if (h) h.classList.toggle('open', hintOpen);
+}
+
+/* ─── GUESSING ─── */
+document.getElementById('gzInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') submitGuess();
+});
+
+function submitGuess() {
+  var inp = document.getElementById('gzInput');
+  var val = inp.value.trim();
+  if (!val) return;
+
+  var gs = getGS(cur);
+  var s = STOPS[cur];
+  var correct = isCorrectGuess(val, s);
+
+  gs.guesses++;
+
+  if (correct) {
+    gs.revealed = true;
+    gs.correct = true;
+    saveAll();
+    renderPips(gs.guesses, true);
+    inp.value = '';
+    showReveal(s, true);
+  } else if (gs.guesses >= 3) {
+    gs.revealed = true;
+    gs.correct = false;
+    saveAll();
+    renderPips(gs.guesses, false);
+    inp.value = '';
+    showReveal(s, false);
+  } else {
+    saveAll();
+    renderPips(gs.guesses, false);
+    inp.value = '';
+    inp.classList.remove('shake');
+    // force reflow for animation restart
+    var _ = inp.offsetWidth;
+    inp.classList.add('shake');
+    var left = 3 - gs.guesses;
+    var fb = document.getElementById('gzFeedback');
+    var msgs = ['Not quite. Try again.', 'Still no. One guess left — think harder.'];
+    fb.textContent = msgs[gs.guesses - 1] || left + ' guesses left.';
+    fb.className = 'gz-feedback wrong show';
+    // update badge
+    var badge = document.querySelector('.mystery-badge');
+    if (badge) badge.textContent = '🔍 ' + left + ' guess' + (left === 1 ? '' : 'es') + ' left';
+  }
+}
+
+function cleanStr(str) {
+  return str.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+}
+
+function isCorrectGuess(input, stop) {
+  var guess = cleanStr(input);
+  if (guess.length < 2) return false;
+  var targets = [stop.name].concat(stop.aliases || []);
+  for (var i = 0; i < targets.length; i++) {
+    var t = cleanStr(targets[i]);
+    if (t.indexOf(guess) !== -1 || guess.indexOf(t) !== -1) return true;
+    if (t.length > 3 && guess.length > 3 && levenshtein(guess, t) <= 2) return true;
+  }
+  return false;
+}
+
+function levenshtein(a, b) {
+  var m = a.length, n = b.length;
+  var dp = [];
+  for (var i = 0; i <= m; i++) {
+    dp[i] = [];
+    for (var j = 0; j <= n; j++) {
+      if (i === 0) dp[i][j] = j;
+      else if (j === 0) dp[i][j] = i;
+      else dp[i][j] = 0;
+    }
+  }
+  for (var i = 1; i <= m; i++) {
+    for (var j = 1; j <= n; j++) {
+      if (a[i-1] === b[j-1]) dp[i][j] = dp[i-1][j-1];
+      else dp[i][j] = 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function showReveal(stop, correct) {
+  var overlay = document.getElementById('revealOverlay');
+  var box = document.getElementById('revealBox');
+  var roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
+
+  if (correct) {
+    box.innerHTML =
+      '<div class="reveal-icon">✨</div>' +
+      '<div class="reveal-title">You got it,<br><em>Ericson.</em></div>' +
+      '<div class="reveal-location">' + escHtml(stop.name) + '</div>' +
+      '<div class="reveal-sub">' + escHtml(stop.cat) + '</div>' +
+      '<button class="reveal-btn sage" onclick="closeReveal()">Let\'s go →</button>';
+  } else {
+    box.innerHTML =
+      '<div class="reveal-icon">😐</div>' +
+      '<div class="reveal-title">Three and out.</div>' +
+      '<div class="reveal-roast">' + escHtml(roast) + '</div>' +
+      '<div class="reveal-location">' + escHtml(stop.name) + '</div>' +
+      '<button class="reveal-btn" onclick="closeReveal()">I accept this outcome</button>';
+  }
+  overlay.style.display = 'flex';
+  if (correct && navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+}
+
+function closeReveal() {
+  document.getElementById('revealOverlay').style.display = 'none';
+  render();
+  scrollTop();
+}
+
+/* ─── MARK DONE ─── */
+function markDone() {
+  done.add(cur);
+  saveAll();
+  if (done.size === STOPS.length) { showScreen('sCelebrate'); launchConfetti(); return; }
+  for (var i = 0; i < STOPS.length; i++) { if (!done.has(i)) { cur = i; break; } }
+  saveAll();
+  render();
+  scrollTop();
+}
+
+function resetHunt() {
+  done = new Set();
+  cur = 0;
+  proximityFired = new Set();
+  guessState = {};
+  saveAll();
+  var container = document.getElementById('confettiContainer');
+  if (container) container.innerHTML = '';
+  showScreen('sHunt');
+  render();
+}
+
+function scrollTop() {
+  var el = document.getElementById('sHunt');
+  if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ─── GPS ─── */
+function checkGPS() {
+  var el = document.getElementById('gpsMsg');
+  var s = STOPS[cur];
+  el.innerHTML = '<div class="m searching">📡 Getting your location…</div>';
+  if (!navigator.geolocation) {
+    el.innerHTML = '<div class="m far">❌ GPS unavailable — use Directions.</div>'; return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var d = calcDist(pos.coords.latitude, pos.coords.longitude, s.lat, s.lng);
+      if (d <= s.r) {
+        el.innerHTML = '<div class="m near">✅ You\'re there! (' + Math.round(d) + 'm away) Mark it complete.</div>';
+        document.getElementById('doneBtn').disabled = false;
+      } else {
+        var disp = d > 1000 ? (d/1000).toFixed(1) + 'km' : Math.round(d) + 'm';
+        el.innerHTML = '<div class="m far">📍 You\'re ' + disp + ' away — keep going.</div>';
+      }
+    },
+    function() {
+      el.innerHTML = '<div class="m far">⚠️ Couldn\'t get location. Allow location access or use Directions.</div>';
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function startGPSWatch() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.watchPosition(
+    function(pos) {
+      var s = STOPS[cur];
+      if (done.has(cur) || proximityFired.has(cur)) return;
+      var d = calcDist(pos.coords.latitude, pos.coords.longitude, s.lat, s.lng);
+      if (d <= 300) {
+        proximityFired.add(cur);
+        saveAll();
+        fireProximity();
+      }
+    },
+    null,
+    { enableHighAccuracy: true, maximumAge: 15000 }
+  );
+}
+
+function fireProximity() {
+  var toast = document.getElementById('toast');
+  toast.textContent = '📍 You\'re getting close… 👀';
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, 4000);
+  try {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      new Notification('Getting close 👀', { body: "You're near the next stop. Check your clue!" });
+    }
+  } catch(e) {}
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch(e) {}
+}
+
+function requestNotifPermission() {
+  try {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  } catch(e) {}
+}
+
+function calcDist(la1, ln1, la2, ln2) {
+  var R = 6371000;
+  var dL = (la2 - la1) * Math.PI / 180;
+  var dN = (ln2 - ln1) * Math.PI / 180;
+  var a = Math.sin(dL/2) * Math.sin(dL/2) +
+          Math.cos(la1 * Math.PI/180) * Math.cos(la2 * Math.PI/180) *
+          Math.sin(dN/2) * Math.sin(dN/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/* ─── CONFETTI ─── */
+function launchConfetti() {
+  var container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  var colors = ['#e8556a','#c9303f','#f28b9a','#6b9478','#9dc0a8','#fceaee'];
+
+  // Red hearts
+  for (var i = 0; i < 28; i++) {
+    (function(idx) {
+      setTimeout(function() {
+        var h = document.createElement('div');
+        h.className = 'heart';
+        h.textContent = '❤️';
+        h.style.left = (Math.random() * 100) + 'vw';
+        h.style.fontSize = (1.1 + Math.random() * 0.8) + 'rem';
+        h.style.animationDuration = (2.2 + Math.random() * 2.5) + 's';
+        h.style.animationDelay = '0s';
+        container.appendChild(h);
+        setTimeout(function() { if (h.parentNode) h.parentNode.removeChild(h); }, 5000);
+      }, idx * 120);
+    })(i);
+  }
+
+  // Paper confetti strips
+  for (var j = 0; j < 40; j++) {
+    (function(idx) {
+      setTimeout(function() {
+        var s = document.createElement('div');
+        s.className = 'confetti-strip';
+        s.style.left = (Math.random() * 100) + 'vw';
+        s.style.background = colors[Math.floor(Math.random() * colors.length)];
+        s.style.animationDuration = (1.8 + Math.random() * 2.5) + 's';
+        s.style.animationDelay = '0s';
+        s.style.opacity = (0.7 + Math.random() * 0.3).toString();
+        container.appendChild(s);
+        setTimeout(function() { if (s.parentNode) s.parentNode.removeChild(s); }, 5000);
+      }, idx * 80);
+    })(j);
+  }
+}
+
+/* ─── ADMIN ─── */
+function checkPW() {
+  var v = document.getElementById('pwInput').value.trim();
+  var err = document.getElementById('pwErr');
+  if (v === ADMIN_PW) {
+    document.getElementById('pwInput').value = '';
+    err.classList.remove('show');
+    showScreen('sAdmin');
+    renderAdmin();
+  } else {
+    err.classList.add('show');
+    document.getElementById('pwInput').value = '';
+  }
+}
+
+document.getElementById('pwInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') checkPW();
+});
+
+function adminReset() {
+  if (!confirm('Reset all of Ericson\'s progress back to Stop 1?')) return;
+  done = new Set();
+  cur = 0;
+  proximityFired = new Set();
+  guessState = {};
+  saveAll();
+  renderAdmin();
+}
+
+/* ─── QA SKIP ─── */
+var qaTapCount = 0;
+var qaTapTimer = null;
+
+function qaLabelTap() {
+  qaTapCount++;
+  clearTimeout(qaTapTimer);
+  if (qaTapCount >= 5) {
+    qaTapCount = 0;
+    var pw = prompt('Password to skip to ending:');
+    if (pw === null) return;
+    if (pw.trim() !== ADMIN_PW) { alert('Nope.'); return; }
+    for (var i = 0; i < STOPS.length; i++) done.add(i);
+    cur = STOPS.length - 1;
+    saveAll();
+    showScreen('sCelebrate');
+    launchConfetti();
+  } else {
+    qaTapTimer = setTimeout(function() { qaTapCount = 0; }, 1500);
+  }
+}
+
+function skipToEnding() {
+  var pw = prompt('Enter password to skip to ending:');
+  if (pw === null) return;
+  if (pw.trim() !== ADMIN_PW) {
+    alert('Wrong password.');
+    return;
+  }
+  // Mark all stops complete for QA
+  for (var i = 0; i < STOPS.length; i++) done.add(i);
+  cur = STOPS.length - 1;
+  saveAll();
+  showScreen('sCelebrate');
+  launchConfetti();
+}
+
+function renderAdmin() {
+  // Progress
+  var p = (done.size / STOPS.length) * 100;
+  document.getElementById('adminBar').style.width = p + '%';
+  document.getElementById('adminProg').textContent = done.size + ' / 12 stops complete';
+  var el = document.getElementById('adminStopList');
+  el.innerHTML = '';
+  for (var i = 0; i < STOPS.length; i++) {
+    var s = STOPS[i];
+    var isDone = done.has(i);
+    var isNow = i === cur && !isDone;
+    var gs = getGS(i);
+    var dc = isDone ? 'spr-done' : isNow ? 'spr-now' : 'spr-not';
+    var status = isDone ? '✓ Done' : isNow ? '▶ Current' : 'Upcoming';
+    var guessInfo = gs.guesses > 0 ? ' · ' + gs.guesses + '/3 tries' : '';
+    var d = document.createElement('div');
+    d.className = 'stop-progress-row';
+    d.innerHTML = '<div class="spr-dot ' + dc + '">' + (i+1) + '</div>' +
+      '<div class="spr-name">' + escHtml(s.name) + '</div>' +
+      '<div class="spr-status">' + status + guessInfo + '</div>';
+    el.appendChild(d);
+  }
+  // Bookings
+  var bl = document.getElementById('bookingList');
+  bl.innerHTML = '';
+  for (var i = 0; i < BOOKINGS.length; i++) {
+    var b = BOOKINGS[i];
+    var d = document.createElement('div');
+    d.className = 'booking-row';
+    var lh = '';
+    for (var j = 0; j < b.links.length; j++) {
+      lh += '<a class="br-link" href="' + b.links[j].url + '" target="_blank">' + escHtml(b.links[j].label) + '</a>';
+    }
+    d.innerHTML = '<div class="br-name">' + escHtml(b.name) + '</div><div class="br-links">' + lh + '</div>' +
+      (b.note ? '<div class="br-note">' + escHtml(b.note) + '</div>' : '');
+    bl.appendChild(d);
+  }
+  // Edit list
+  var editEl = document.getElementById('editList');
+  editEl.innerHTML = '';
+  for (var i = 0; i < STOPS.length; i++) {
+    var s = STOPS[i];
+    var d = document.createElement('div');
+    d.className = 'edit-stop-card';
+    d.innerHTML =
+      '<div class="esc-name">Stop ' + (i+1) + ': ' + escHtml(s.name) + '</div>' +
+      '<div class="edit-field"><div class="ef-label">Stop Name</div>' +
+        '<input class="ef-input" id="ename-' + i + '" value="' + escHtml(s.name) + '"></div>' +
+      '<div class="edit-field"><div class="ef-label">Clue Text</div>' +
+        '<textarea class="ef-input" id="eclue-' + i + '" rows="4">' + escHtml(s.clue) + '</textarea></div>' +
+      '<div class="edit-field"><div class="ef-label">Hint Text</div>' +
+        '<textarea class="ef-input" id="ehint-' + i + '" rows="3">' + escHtml(s.hint) + '</textarea></div>' +
+      '<div style="display:flex;align-items:center;gap:.7rem;">' +
+        '<button class="ef-save" onclick="saveStop(' + i + ')">Save</button>' +
+        '<span class="ef-saved" id="esaved-' + i + '">✓ Saved!</span>' +
+      '</div>';
+    editEl.appendChild(d);
+  }
+}
+
+function saveStop(i) {
+  STOPS[i].name = document.getElementById('ename-' + i).value;
+  STOPS[i].clue = document.getElementById('eclue-' + i).value;
+  STOPS[i].hint = document.getElementById('ehint-' + i).value;
+  saveAll();
+  var sv = document.getElementById('esaved-' + i);
+  sv.classList.add('show');
+  setTimeout(function() { sv.classList.remove('show'); }, 2000);
+}
+
+function copyText(textId, btnId) {
+  var text = document.getElementById(textId).textContent;
+  var btn = document.getElementById(btnId);
+  // Use execCommand fallback for Safari compatibility
+  var textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy Text'; btn.classList.remove('copied'); }, 2000);
+  } catch(e) {
+    btn.textContent = 'Long-press to copy';
+  }
+  document.body.removeChild(textarea);
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+/* ─── INIT ─── */
+// Register service worker for PWA offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function() {});
+  });
+}
+
+// Resume in-progress hunt — skip PIN if already unlocked mid-session
+if (done.size > 0 || cur > 0) {
+  showScreen('sHunt');
+  initHunt();
+}
+</script>
+</body>
+</html>
